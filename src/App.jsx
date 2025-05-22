@@ -33,9 +33,9 @@ const App = () => (
       <Container maxWidth="lg">
         <Routes>
           <Route path="/" element={<Signin />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/signin" element={<Signin />} />
-          <Route path="/orders" element={<AllOrders />} />
+          <Route path="https://achilyon-softwares.vercel.app/signup" element={<Signup />} />
+          <Route path="https://achilyon-softwares.vercel.app/signin" element={<Signin />} />
+          <Route path="https://achilyon-softwares.vercel.app/orders" element={<AllOrders />} />
         </Routes>
       </Container>
     </Router>
