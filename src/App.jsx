@@ -33,7 +33,7 @@ const App = () => (
       <Container maxWidth="lg">
         <Routes>
           <Route path="/" element={<Signup />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/signup" element={<Signin />} />
           <Route path="/signin" element={<Signin />} />
           <Route path="/orders" element={<AllOrders />} />
         </Routes>
