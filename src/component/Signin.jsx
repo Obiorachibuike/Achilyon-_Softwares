@@ -81,7 +81,7 @@ const Signin = () => {
         {/* Link to Signup component */}
         <Typography variant="body2" align="center" style={{ marginTop: '16px' }}>
           Don't have an account?{' '}
-          <Link href="/signup" color="primary">
+          <Link href="https://achilyon-softwares.vercel.app/signup" color="primary">
             Sign up
           </Link>
         </Typography>
