@@ -1,45 +1,27 @@
-// App.js
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Signup from './component/Signup.jsx';
 import Signin from './component/Signin.jsx';
 import AllOrders from './component/AllOrders.jsx';
-import Container from '@mui/material/Container';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2', // Custom primary color
-    },
-    secondary: {
-      main: '#ff4081', // Custom secondary color
-    },
-  },
-  typography: {
-    fontFamily: 'Arial, sans-serif',
-    h4: {
-      fontWeight: 'bold',
-    },
-    body2: {
-      color: '#555',
-    },
-  },
-});
+import MainLayout from './component/Layout/MainLayout.jsx';
+import CoinsPage from './component/CoinsPage.jsx';
+import WalletsPage from './component/WalletsPage.jsx';
 
 const App = () => (
-  <ThemeProvider theme={theme}>
-    <Router>
-      <Container maxWidth="lg">
-        <Routes>
-          <Route path="/" element={<Signin />} />
-          <Route path="https://achilyon-softwares.vercel.app/signup" element={<Signup />} />
-          <Route path="https://achilyon-softwares.vercel.app/signin" element={<Signin />} />
-          <Route path="https://achilyon-softwares.vercel.app/orders" element={<AllOrders />} />
-        </Routes>
-      </Container>
-    </Router>
-  </ThemeProvider>
+  <Router>
+    <Routes>
+      <Route path="/signin" element={<Signin />} />
+      <Route path="/signup" element={<Signup />} />
+
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<Navigate to="/coins" replace />} />
+        <Route path="coins" element={<CoinsPage />} />
+        <Route path="wallets" element={<WalletsPage />} />
+        <Route path="orders" element={<AllOrders />} />
+        {/* Placeholder for other routes */}
+        <Route path="*" element={<div className="text-2xl font-bold">Not Found</div>} />
+      </Route>
+    </Routes>
+  </Router>
 );
 
 export default App;
