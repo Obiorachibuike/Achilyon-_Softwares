@@ -1,5 +1,4 @@
-// Signin.js
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Button,
   TextField,
@@ -80,7 +79,7 @@ const Signin = () => {
         </Formik>
         {/* Link to Signup component */}
         <Typography variant="body2" align="center" style={{ marginTop: '16px' }}>
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="https://achilyon-softwares.vercel.app/signup" color="primary">
             Sign up
           </Link>
