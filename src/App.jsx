@@ -1,45 +1,59 @@
-// App.js
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import Signup from './component/Signup.jsx';
-import Signin from './component/Signin.jsx';
-import AllOrders from './component/AllOrders.jsx';
-import Container from '@mui/material/Container';
+import { Layout } from './components/Layout'
+import { TopFiltersBar } from './components/TopFiltersBar'
+import { CoinsTable } from './components/CoinsTable'
+import { AISummary } from './components/AISummary'
+import Wallets from './views/Wallets'
+import useCoinStore from './store/useCoinStore'
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2', // Custom primary color
-    },
-    secondary: {
-      main: '#ff4081', // Custom secondary color
-    },
-  },
-  typography: {
-    fontFamily: 'Arial, sans-serif',
-    h4: {
-      fontWeight: 'bold',
-    },
-    body2: {
-      color: '#555',
-    },
-  },
-});
+function App() {
+  const { activeView, coins } = useCoinStore()
 
-const App = () => (
-  <ThemeProvider theme={theme}>
-    <Router>
-      <Container maxWidth="lg">
-        <Routes>
-          <Route path="/" element={<Signin />} />
-          <Route path="https://achilyon-softwares.vercel.app/signup" element={<Signup />} />
-          <Route path="https://achilyon-softwares.vercel.app/signin" element={<Signin />} />
-          <Route path="https://achilyon-softwares.vercel.app/orders" element={<AllOrders />} />
-        </Routes>
-      </Container>
-    </Router>
-  </ThemeProvider>
-);
+  const renderContent = () => {
+    switch (activeView) {
+      case 'coins':
+      case 'trending':
+        return (
+          <div className="flex-1 flex flex-col overflow-hidden p-6">
+            <h1 className="text-2xl font-bold mb-2 uppercase tracking-tight">
+              {activeView === 'trending' ? 'Trending Tokens' : 'Coin Discovery'}
+            </h1>
+            <p className="text-muted-foreground text-sm mb-6">
+              Real-time on-chain discovery engine. Discover new opportunities across multiple chains.
+            </p>
 
-export default App;
+            {activeView === 'trending' && coins.length > 0 && (
+              <AISummary pair={coins[0]} />
+            )}
+
+            <div className="bg-card border border-border rounded-lg flex-1 flex flex-col overflow-hidden shadow-sm">
+              <TopFiltersBar />
+              <CoinsTable />
+            </div>
+          </div>
+        )
+      case 'wallets':
+        return <Wallets />
+      default:
+        return (
+          <div className="flex-1 flex items-center justify-center flex-col gap-4">
+            <h1 className="text-4xl font-bold text-muted uppercase">{activeView}</h1>
+            <p className="text-muted-foreground">This section is currently under development.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+            >
+              Go Back
+            </button>
+          </div>
+        )
+    }
+  }
+
+  return (
+    <Layout>
+      {renderContent()}
+    </Layout>
+  )
+}
+
+export default App
