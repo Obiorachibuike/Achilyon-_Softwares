@@ -10,6 +10,8 @@ const chains = [
   { id: 'arbitrum', name: 'Arbitrum' },
   { id: 'polygon', name: 'Polygon' },
   { id: 'avalanche', name: 'Avalanche' },
+  { id: 'tron', name: 'Tron' },
+  { id: 'ton', name: 'Ton' },
 ];
 
 const dexesByChain = {
@@ -18,6 +20,8 @@ const dexesByChain = {
   bsc: ['pancake-swap', 'biswap'],
   solana: ['raydium', 'orca', 'jupiter'],
   arbitrum: ['uniswap', 'camelot', 'traderjoe'],
+  tron: ['sunswap'],
+  ton: ['ston.fi', 'dedust'],
 };
 
 export function FilterBar() {

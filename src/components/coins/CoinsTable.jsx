@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-table';
 import { useCoinStore } from '../../store/useCoinStore';
 import { formatCurrency, cn } from '../../lib/utils';
-import { ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, TrendingUp, MessageSquare } from 'lucide-react';
 
 const formatAge = (createdAt) => {
   if (!createdAt) return 'N/A';
@@ -75,6 +75,26 @@ export function CoinsTable() {
       accessorKey: 'pairCreatedAt',
       header: 'Age',
       cell: ({ row }) => formatAge(row.original.pairCreatedAt),
+    },
+    {
+      id: 'signal',
+      header: 'Social Signal',
+      cell: () => {
+        const sentiments = ['Bullish', 'Bearish', 'Neutral', 'V.Bullish'];
+        const sentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
+        return (
+          <div className="flex items-center space-x-1.5">
+            <MessageSquare size={12} className="text-blue-400" />
+            <span className={cn(
+              "text-[10px] font-bold px-1.5 py-0.5 rounded",
+              sentiment === 'Bullish' || sentiment === 'V.Bullish' ? "bg-green-500/10 text-green-500" :
+              sentiment === 'Bearish' ? "bg-red-500/10 text-red-500" : "bg-secondary text-muted-foreground"
+            )}>
+              {sentiment}
+            </span>
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'priceChange.h24',

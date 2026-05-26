@@ -1,19 +1,20 @@
-import { LayoutDashboard, Wallet, FileText, Coins, Bell, TrendingUp, Users } from 'lucide-react';
+import { LayoutDashboard, Wallet, FileText, Coins, Bell, TrendingUp, Users, Bot } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useCoinStore } from '../../store/useCoinStore';
+import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
-  { icon: Wallet, label: 'Wallets', id: 'wallets' },
-  { icon: FileText, label: 'Contracts', id: 'contracts' },
-  { icon: Coins, label: 'Coins', id: 'coins' },
-  { icon: Bell, label: 'Alerts', id: 'alerts' },
-  { icon: Users, label: 'Smart Money', id: 'smart-money' },
-  { icon: TrendingUp, label: 'Trending', id: 'trending' },
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+  { icon: Wallet, label: 'Wallets', path: '/wallets' },
+  { icon: FileText, label: 'Contracts', path: '/contracts' },
+  { icon: Coins, label: 'Coins', path: '/coins' },
+  { icon: Bell, label: 'Alerts', path: '/alerts' },
+  { icon: Users, label: 'Smart Money', path: '/smart-money' },
+  { icon: TrendingUp, label: 'Trending', path: '/trending' },
+  { icon: Bot, label: 'Bot Terminal', path: '/bot' },
 ];
 
 export function Sidebar() {
-  const { currentView, setView } = useCoinStore();
+  const location = useLocation();
 
   return (
     <div className="w-64 bg-card border-r border-border h-screen flex flex-col fixed left-0 top-0">
@@ -24,19 +25,19 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 px-4 space-y-2">
         {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setView(item.id)}
+          <Link
+            key={item.path}
+            to={item.path}
             className={cn(
               "w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
-              currentView === item.id
+              location.pathname === item.path
                 ? "bg-secondary text-primary"
                 : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
             )}
           >
             <item.icon size={20} />
             <span className="font-medium">{item.label}</span>
-          </button>
+          </Link>
         ))}
       </nav>
       <div className="p-4 border-t border-border">
