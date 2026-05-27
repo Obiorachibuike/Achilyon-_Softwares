@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 3.9%;
+  --foreground: 0 0% 98%;
+}
+
+body {
+  @apply bg-neutral-950 text-neutral-50;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}

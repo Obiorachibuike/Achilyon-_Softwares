@@ -1,45 +1,34 @@
-// App.js
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import Signup from './component/Signup.jsx';
-import Signin from './component/Signin.jsx';
-import AllOrders from './component/AllOrders.jsx';
-import Container from '@mui/material/Container';
+import Sidebar from './components/Sidebar';
+import CoinsPage from './views/CoinsPage';
+import { useCoinStore } from './store/useCoinStore';
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2', // Custom primary color
-    },
-    secondary: {
-      main: '#ff4081', // Custom secondary color
-    },
-  },
-  typography: {
-    fontFamily: 'Arial, sans-serif',
-    h4: {
-      fontWeight: 'bold',
-    },
-    body2: {
-      color: '#555',
-    },
-  },
-});
+const App = () => {
+  const { currentView } = useCoinStore();
 
-const App = () => (
-  <ThemeProvider theme={theme}>
-    <Router>
-      <Container maxWidth="lg">
-        <Routes>
-          <Route path="/" element={<Signin />} />
-          <Route path="https://achilyon-softwares.vercel.app/signup" element={<Signup />} />
-          <Route path="https://achilyon-softwares.vercel.app/signin" element={<Signin />} />
-          <Route path="https://achilyon-softwares.vercel.app/orders" element={<AllOrders />} />
-        </Routes>
-      </Container>
-    </Router>
-  </ThemeProvider>
-);
+  const renderView = () => {
+    switch (currentView) {
+      case 'coins':
+        return <CoinsPage />;
+      default:
+        return (
+          <div className="flex-1 flex items-center justify-center text-neutral-500">
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-2 uppercase">{currentView}</h2>
+              <p>This module is coming soon in Phase 2.</p>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-black text-white overflow-hidden">
+      <Sidebar />
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {renderView()}
+      </main>
+    </div>
+  );
+};
 
 export default App;
