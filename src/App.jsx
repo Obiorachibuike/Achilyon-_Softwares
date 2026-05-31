@@ -1,15 +1,13 @@
 import { useEffect, useCallback } from 'react'
 import Sidebar from './components/Sidebar'
-import FiltersBar from './components/FiltersBar'
-import CoinsTable from './components/CoinsTable'
 import useCoinStore from './store/useCoinStore'
 import { coinService } from './services/api'
-import { TrendingUp, Activity, ShieldCheck, Zap } from 'lucide-react'
-import { cn } from './lib/utils'
-import PropTypes from 'prop-types'
+import DashboardView from './views/DashboardView'
+import CoinsView from './views/CoinsView'
+import WalletsView from './views/WalletsView'
 
 const App = () => {
-  const { view, coins, setCoins, loading, setLoading, setError, filters } = useCoinStore()
+  const { view, setCoins, loading, setLoading, setError, filters } = useCoinStore()
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -21,13 +19,63 @@ const App = () => {
         data = await coinService.getTrending()
       }
 
-      // Apply client-side filters for Age and Liquidity (since DexScreener search is broad)
+      // Apply client-side filters
       let filteredData = data
 
+      // Filter by DEX
+      if (filters.dex !== 'all') {
+        filteredData = filteredData.filter(p => p.dexId?.toLowerCase().includes(filters.dex))
+      }
+
+      // Filter by Liquidity
       if (filters.liquidity !== 'all') {
         const minLiq = filters.liquidity.includes('10k') ? 10000 :
                        filters.liquidity.includes('100k') ? 100000 : 1000000
         filteredData = filteredData.filter(p => parseFloat(p.liquidity?.usd || 0) >= minLiq)
+      }
+
+      // Filter by Age
+      if (filters.age !== 'all') {
+        const now = Date.now()
+        const maxAgeHours = filters.age.includes('1h') ? 1 :
+                           filters.age.includes('6h') ? 6 :
+                           filters.age.includes('24h') ? 24 : 24 * 7
+        filteredData = filteredData.filter(p => (now - p.pairCreatedAt) / (1000 * 60 * 60) <= maxAgeHours)
+      }
+
+      // Filter by Market Cap
+      if (filters.marketCap !== 'all') {
+        filteredData = filteredData.filter(p => {
+          const mcap = p.fdv || 0
+          if (filters.marketCap.includes('micro')) return mcap < 1000000
+          if (filters.marketCap.includes('small')) return mcap < 10000000
+          if (filters.marketCap.includes('mid')) return mcap < 100000000
+          if (filters.marketCap.includes('large')) return mcap >= 100000000
+          return true
+        })
+      }
+
+      // Filter by Volume
+      if (filters.volume !== 'all') {
+        const minVol = filters.volume.includes('10k') ? 10000 :
+                       filters.volume.includes('100k') ? 100000 :
+                       filters.volume.includes('1m') ? 1000000 : 10000000
+        filteredData = filteredData.filter(p => (p.volume?.h24 || 0) >= minVol)
+      }
+
+      // Filter by Verified
+      if (filters.verified) {
+        filteredData = filteredData.filter(p => p.info?.imageUrl || p.info?.socials?.length > 0)
+      }
+
+      // Filter by Search Query
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase()
+        filteredData = filteredData.filter(p =>
+          p.baseToken?.name?.toLowerCase().includes(query) ||
+          p.baseToken?.symbol?.toLowerCase().includes(query) ||
+          p.baseToken?.address?.toLowerCase().includes(query)
+        )
       }
 
       setCoins(filteredData)
@@ -46,33 +94,11 @@ const App = () => {
   const renderContent = () => {
     switch (view) {
       case 'dashboard':
-        return (
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard title="Trending Pairs" value="1,284" icon={TrendingUp} color="text-blue-500" />
-              <StatCard title="New Listings" value="42" icon={Zap} color="text-yellow-500" />
-              <StatCard title="Safe Pairs" value="85%" icon={ShieldCheck} color="text-green-500" />
-              <StatCard title="Market Volatility" value="High" icon={Activity} color="text-red-500" />
-            </div>
-
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className="p-4 border-b border-border flex justify-between items-center">
-                <h2 className="text-lg font-bold">Top Market Pairs</h2>
-                <button className="text-sm text-primary hover:underline" onClick={() => fetchData()}>Refresh</button>
-              </div>
-              <CoinsTable data={coins.slice(0, 10)} />
-            </div>
-          </div>
-        )
+        return <DashboardView fetchData={fetchData} />
       case 'coins':
-        return (
-          <div className="flex flex-col h-full">
-            <FiltersBar />
-            <div className="flex-1 overflow-auto bg-card">
-              <CoinsTable data={coins} />
-            </div>
-          </div>
-        )
+        return <CoinsView />
+      case 'wallets':
+        return <WalletsView />
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground italic">
@@ -112,25 +138,6 @@ const App = () => {
       </main>
     </div>
   )
-}
-
-const StatCard = ({ title, value, icon: Icon, color }) => (
-  <div className="bg-card p-6 rounded-xl border border-border flex items-center justify-between">
-    <div>
-      <p className="text-sm text-muted-foreground mb-1">{title}</p>
-      <p className="text-2xl font-bold">{value}</p>
-    </div>
-    <div className={cn("p-3 rounded-lg bg-secondary", color)}>
-      <Icon size={24} />
-    </div>
-  </div>
-)
-
-StatCard.propTypes = {
-  title: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
-  icon: PropTypes.elementType.isRequired,
-  color: PropTypes.string.isRequired,
 }
 
 export default App
