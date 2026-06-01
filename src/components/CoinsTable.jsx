@@ -39,7 +39,9 @@ const columns = [
   columnHelper.accessor('pairCreatedAt', {
     header: 'Age',
     cell: info => {
-      const age = (Date.now() - info.getValue()) / 1000 / 60 / 60
+      const val = info.getValue()
+      if (!val) return 'N/A'
+      const age = (Date.now() - val) / 1000 / 60 / 60
       return age < 24 ? `${age.toFixed(1)}h` : `${(age / 24).toFixed(1)}d`
     },
   }),
