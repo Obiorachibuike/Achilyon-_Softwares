@@ -5,10 +5,11 @@ const useCoinStore = create((set) => ({
   filters: {
     network: 'all',
     dex: 'all',
-    age: '24h',
+    age: 'all',
     marketCap: 'all',
     liquidity: 'all',
     volume: 'all',
+    searchQuery: '',
   },
   loading: false,
   error: null,

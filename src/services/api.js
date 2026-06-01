@@ -24,8 +24,13 @@ export const coinService = {
   async getPairsByChain(chainId) {
     // DexScreener API doesn't have a direct "all pairs for chain" endpoint without a query
     // So we query for common base tokens on that chain
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${chainId}`);
-    return response.data.pairs || [];
+    try {
+      const response = await axios.get(`${DEX_SCREENER_API}/search?q=${chainId}`);
+      return response.data.pairs || [];
+    } catch (error) {
+      console.error(`DexScreener API error for chain ${chainId}`, error);
+      return [];
+    }
   }
 };
 

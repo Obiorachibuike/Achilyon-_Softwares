@@ -13,10 +13,10 @@ const AISummary = ({ token }) => {
     const sells = parseInt(token.txns?.h24?.sells || 0)
 
     if (vol > 1000000 && buys > sells * 1.5) {
-      return `Strong bullish momentum. High volume ($${(vol/1000000).toFixed(1)}M) with significant buying pressure. Whale accumulation detected.`
+      return `Strong bullish momentum for ${token.baseToken?.symbol}. High volume ($${(vol/1000000).toFixed(1)}M) with significant buying pressure. Whale accumulation detected on ${token.chainId}.`
     }
     if (liq < 50000) {
-      return `High risk. Low liquidity ($${(liq/1000).toFixed(1)}K) may lead to high slippage. Exercise caution.`
+      return `High risk for ${token.baseToken?.symbol}. Low liquidity ($${(liq/1000).toFixed(1)}K) may lead to high slippage. Exercise caution while trading on ${token.dexId}.`
     }
     return `Stable trading activity. Liquidity and volume are within normal ranges for ${token.baseToken?.symbol}.`
   }
@@ -50,7 +50,9 @@ AISummary.propTypes = {
     }),
     baseToken: PropTypes.shape({
       symbol: PropTypes.string
-    })
+    }),
+    chainId: PropTypes.string,
+    dexId: PropTypes.string
   })
 }
 
