@@ -9,6 +9,8 @@ const useCoinStore = create((set) => ({
     marketCap: 'all',
     liquidity: 'all',
     volume: 'all',
+    searchQuery: '',
+    sortBy: 'trending',
   },
   loading: false,
   error: null,
