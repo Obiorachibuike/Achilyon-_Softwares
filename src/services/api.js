@@ -23,9 +23,26 @@ export const coinService = {
 
   async getPairsByChain(chainId) {
     // DexScreener API doesn't have a direct "all pairs for chain" endpoint without a query
-    // So we query for common base tokens on that chain
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${chainId}`);
-    return response.data.pairs || [];
+    // So we query for common quote tokens on that chain to get a representative sample
+    const quotes = ['USDT', 'USDC', 'ETH', 'WETH', 'SOL'];
+    try {
+      const results = await Promise.all(
+        quotes.map(quote =>
+          axios.get(`${DEX_SCREENER_API}/search?q=${chainId} ${quote}`)
+            .then(res => res.data.pairs || [])
+            .catch(() => [])
+        )
+      );
+
+      // Flatten and remove duplicates by pairAddress
+      const allPairs = results.flat();
+      const uniquePairs = Array.from(new Map(allPairs.map(p => [p.pairAddress, p])).values());
+
+      return uniquePairs;
+    } catch (error) {
+      console.error(`Error fetching pairs for ${chainId}:`, error);
+      return [];
+    }
   }
 };
 
