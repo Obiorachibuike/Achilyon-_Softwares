@@ -5,7 +5,8 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { formatCurrency, formatCompactNumber } from '../lib/utils'
+import { formatCurrency, formatCompactNumber, cn } from '../lib/utils'
+import { calculateTrendingScore } from '../lib/trending'
 import PropTypes from 'prop-types'
 
 const columnHelper = createColumnHelper()
@@ -14,9 +15,19 @@ const columns = [
   columnHelper.accessor('baseToken.symbol', {
     header: 'Token',
     cell: info => (
-      <div className="flex items-center">
-        <div className="font-bold">{info.getValue()}</div>
-        <span className="ml-2 text-xs text-muted-foreground">{info.row.original.quoteToken.symbol}</span>
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold border border-primary/20">
+          {info.getValue()?.slice(0, 2).toUpperCase()}
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold">{info.getValue()}</span>
+            <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] font-bold uppercase border border-border">
+              {info.row.original.chainId}
+            </span>
+          </div>
+          <div className="text-xs text-muted-foreground">{info.row.original.quoteToken.symbol}</div>
+        </div>
       </div>
     ),
   }),
@@ -36,13 +47,53 @@ const columns = [
     header: 'Volume (24h)',
     cell: info => `$${formatCompactNumber(info.getValue())}`,
   }),
+  columnHelper.accessor('txns.h24', {
+    header: 'Buys/Sells',
+    cell: info => {
+      const txns = info.getValue() || { buys: 0, sells: 0 }
+      const total = txns.buys + txns.sells
+      const buyPercent = total > 0 ? (txns.buys / total) * 100 : 50
+      return (
+        <div className="w-32">
+          <div className="flex justify-between text-[10px] mb-1">
+            <span className="text-green-500">{txns.buys} B</span>
+            <span className="text-red-500">{txns.sells} S</span>
+          </div>
+          <div className="h-1.5 w-full bg-red-500/20 rounded-full overflow-hidden flex">
+            <div
+              className="h-full bg-green-500"
+              style={{ width: `${buyPercent}%` }}
+            />
+          </div>
+        </div>
+      )
+    }
+  }),
   columnHelper.accessor('pairCreatedAt', {
     header: 'Age',
     cell: info => {
+      if (!info.getValue()) return 'N/A'
       const age = (Date.now() - info.getValue()) / 1000 / 60 / 60
       return age < 24 ? `${age.toFixed(1)}h` : `${(age / 24).toFixed(1)}d`
     },
   }),
+  columnHelper.display({
+    id: 'trend',
+    header: 'Trend',
+    cell: info => {
+      const score = calculateTrendingScore(info.row.original)
+      return (
+        <div className={cn(
+          "inline-flex items-center px-2 py-1 rounded text-xs font-bold",
+          score > 50 ? "bg-green-500/10 text-green-500" :
+          score > 20 ? "bg-yellow-500/10 text-yellow-500" :
+          "bg-muted text-muted-foreground"
+        )}>
+          {score}
+        </div>
+      )
+    }
+  })
 ]
 
 const CoinsTable = ({ data }) => {
