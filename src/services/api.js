@@ -4,8 +4,6 @@ const DEX_SCREENER_API = 'https://api.dexscreener.com/latest/dex';
 
 export const coinService = {
   async getTrending() {
-    // For a real trending endpoint, DexScreener uses token profiles or specific search volumes
-    // For MVP, we fetch latest pairs which serves as a discovery mechanism
     try {
       const response = await axios.get(`${DEX_SCREENER_API}/search?q=USDT`);
       return response.data.pairs || [];
@@ -17,15 +15,35 @@ export const coinService = {
 
   async searchPairs(query) {
     if (!query) return [];
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
-    return response.data.pairs || [];
+    try {
+      const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
+      return response.data.pairs || [];
+    } catch (error) {
+      console.error("DexScreener Search error", error);
+      return [];
+    }
   },
 
   async getPairsByChain(chainId) {
-    // DexScreener API doesn't have a direct "all pairs for chain" endpoint without a query
-    // So we query for common base tokens on that chain
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${chainId}`);
-    return response.data.pairs || [];
+    // DexScreener doesn't have a chain-wide endpoint.
+    // Concurrently fetch common quote tokens to build a representative dataset.
+    const quoteTokens = ['USDT', 'USDC', 'ETH', 'WETH', 'SOL'];
+    try {
+      const requests = quoteTokens.map(quote =>
+        axios.get(`${DEX_SCREENER_API}/search?q=${chainId} ${quote}`)
+      );
+      const responses = await Promise.all(requests);
+
+      // Merge and deduplicate pairs
+      const allPairs = responses.flatMap(r => r.data.pairs || []);
+      const uniquePairs = Array.from(new Map(allPairs.map(p => [p.pairAddress, p])).values());
+
+      // Secondary filter to ensure we only have pairs for the requested chain
+      return uniquePairs.filter(p => p.chainId === chainId);
+    } catch (error) {
+      console.error(`DexScreener chain fetch error for ${chainId}`, error);
+      return [];
+    }
   }
 };
 
