@@ -6,6 +6,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { formatCurrency, formatCompactNumber } from '../lib/utils'
+import { calculateTrendingScore } from '../lib/trending'
 import PropTypes from 'prop-types'
 
 const columnHelper = createColumnHelper()
@@ -14,34 +15,105 @@ const columns = [
   columnHelper.accessor('baseToken.symbol', {
     header: 'Token',
     cell: info => (
-      <div className="flex items-center">
-        <div className="font-bold">{info.getValue()}</div>
-        <span className="ml-2 text-xs text-muted-foreground">{info.row.original.quoteToken.symbol}</span>
+      <div className="flex items-center gap-3">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-foreground">{info.getValue()}</span>
+            <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground font-mono uppercase">
+              {info.row.original.chainId}
+            </span>
+          </div>
+          <span className="text-xs text-muted-foreground">{info.row.original.baseToken.name}</span>
+        </div>
       </div>
     ),
   }),
   columnHelper.accessor('priceUsd', {
     header: 'Price',
-    cell: info => formatCurrency(parseFloat(info.getValue())),
+    cell: info => (
+      <div className="font-mono text-foreground">
+        {formatCurrency(parseFloat(info.getValue() || 0))}
+      </div>
+    ),
   }),
   columnHelper.accessor('fdv', {
-    header: 'MCAP (FDV)',
-    cell: info => `$${formatCompactNumber(info.getValue())}`,
+    header: 'MCAP',
+    cell: info => (
+      <div className="font-medium">
+        ${formatCompactNumber(info.getValue() || 0)}
+      </div>
+    ),
   }),
   columnHelper.accessor('liquidity.usd', {
     header: 'Liquidity',
-    cell: info => `$${formatCompactNumber(info.getValue())}`,
+    cell: info => (
+      <div className="font-medium">
+        ${formatCompactNumber(info.getValue() || 0)}
+      </div>
+    ),
   }),
   columnHelper.accessor('volume.h24', {
     header: 'Volume (24h)',
-    cell: info => `$${formatCompactNumber(info.getValue())}`,
+    cell: info => (
+      <div className="font-medium text-primary">
+        ${formatCompactNumber(info.getValue() || 0)}
+      </div>
+    ),
   }),
   columnHelper.accessor('pairCreatedAt', {
     header: 'Age',
     cell: info => {
+      if (!info.getValue()) return 'N/A'
       const age = (Date.now() - info.getValue()) / 1000 / 60 / 60
-      return age < 24 ? `${age.toFixed(1)}h` : `${(age / 24).toFixed(1)}d`
+      return (
+        <div className="text-muted-foreground text-xs italic">
+          {age < 24 ? `${age.toFixed(1)}h` : `${(age / 24).toFixed(1)}d`}
+        </div>
+      )
     },
+  }),
+  columnHelper.display({
+    id: 'buysSells',
+    header: 'Buys/Sells (24h)',
+    cell: info => {
+      const buys = info.row.original.txns?.h24?.buys || 0
+      const sells = info.row.original.txns?.h24?.sells || 0
+      const total = buys + sells
+      const buyPercent = total > 0 ? (buys / total) * 100 : 50
+
+      return (
+        <div className="w-32 space-y-1">
+          <div className="flex justify-between text-[10px] font-bold">
+            <span className="text-green-500">{buys} B</span>
+            <span className="text-red-500">{sells} S</span>
+          </div>
+          <div className="h-1.5 w-full bg-red-500/20 rounded-full overflow-hidden flex">
+            <div
+              className="h-full bg-green-500"
+              style={{ width: `${buyPercent}%` }}
+            />
+          </div>
+        </div>
+      )
+    }
+  }),
+  columnHelper.display({
+    id: 'trend',
+    header: 'Trend',
+    cell: info => {
+      const score = calculateTrendingScore(info.row.original)
+      return (
+        <div className="flex items-center gap-2">
+          <div className={`text-xs font-bold px-2 py-1 rounded ${
+            score > 50 ? 'bg-green-500/10 text-green-500' :
+            score > 20 ? 'bg-yellow-500/10 text-yellow-500' :
+            'bg-muted text-muted-foreground'
+          }`}>
+            {score}
+          </div>
+        </div>
+      )
+    }
   }),
 ]
 
@@ -55,11 +127,11 @@ const CoinsTable = ({ data }) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse">
-        <thead className="bg-muted text-muted-foreground uppercase text-xs">
+        <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] tracking-wider font-bold">
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => (
-                <th key={header.id} className="px-4 py-3 font-medium">
+                <th key={header.id} className="px-4 py-4 border-b border-border">
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -72,15 +144,23 @@ const CoinsTable = ({ data }) => {
           ))}
         </thead>
         <tbody className="divide-y divide-border">
-          {table.getRowModel().rows.map(row => (
-            <tr key={row.id} className="hover:bg-muted/50 transition-colors">
-              {row.getVisibleCells().map(cell => (
-                <td key={cell.id} className="px-4 py-4 text-sm">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
+          {table.getRowModel().rows.length > 0 ? (
+            table.getRowModel().rows.map(row => (
+              <tr key={row.id} className="hover:bg-primary/5 transition-colors group">
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="px-4 py-4 text-sm whitespace-nowrap">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={columns.length} className="px-4 py-20 text-center text-muted-foreground italic">
+                No tokens found matching your filters.
+              </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>
