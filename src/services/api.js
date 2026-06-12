@@ -2,11 +2,21 @@ import axios from 'axios';
 
 const DEX_SCREENER_API = 'https://api.dexscreener.com/latest/dex';
 
+// Chain mapping for DexScreener
+const CHAIN_MAP = {
+  'ethereum': 'ethereum',
+  'base': 'base',
+  'bnb': 'bsc',
+  'solana': 'solana',
+  'arbitrum': 'arbitrum',
+  'polygon': 'polygon',
+  'avalanche': 'avalanche'
+};
+
 export const coinService = {
   async getTrending() {
-    // For a real trending endpoint, DexScreener uses token profiles or specific search volumes
-    // For MVP, we fetch latest pairs which serves as a discovery mechanism
     try {
+      // Get trending by searching for broad market tokens
       const response = await axios.get(`${DEX_SCREENER_API}/search?q=USDT`);
       return response.data.pairs || [];
     } catch (error) {
@@ -17,15 +27,35 @@ export const coinService = {
 
   async searchPairs(query) {
     if (!query) return [];
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
-    return response.data.pairs || [];
+    try {
+      const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
+      return response.data.pairs || [];
+    } catch (error) {
+      console.error("DexScreener search error", error);
+      return [];
+    }
   },
 
   async getPairsByChain(chainId) {
-    // DexScreener API doesn't have a direct "all pairs for chain" endpoint without a query
-    // So we query for common base tokens on that chain
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${chainId}`);
-    return response.data.pairs || [];
+    const dsChainId = CHAIN_MAP[chainId] || chainId;
+    try {
+      // DexScreener doesn't have a direct "list all" for a chain.
+      // We fetch common quote pairs to populate the discovery list.
+      const queries = ['USDT', 'USDC', 'ETH', 'SOL'];
+      const results = await Promise.all(
+        queries.map(q => axios.get(`${DEX_SCREENER_API}/search?q=${dsChainId}%20${q}`))
+      );
+
+      const allPairs = results.flatMap(r => r.data.pairs || []);
+
+      // Deduplicate by pair address
+      const uniquePairs = Array.from(new Map(allPairs.map(p => [p.pairAddress, p])).values());
+
+      return uniquePairs.filter(p => p.chainId === dsChainId);
+    } catch (error) {
+      console.error(`Error fetching pairs for chain ${dsChainId}`, error);
+      return [];
+    }
   }
 };
 
