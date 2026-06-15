@@ -5,10 +5,18 @@ const useCoinStore = create((set) => ({
   filters: {
     network: 'all',
     dex: 'all',
-    age: '24h',
+    age: 'all',
     marketCap: 'all',
     liquidity: 'all',
     volume: 'all',
+    searchQuery: '',
+    sortBy: 'trending',
+    verifiedOnly: false,
+  },
+  wallet: {
+    address: null,
+    balance: '0.00',
+    connected: false,
   },
   loading: false,
   error: null,
@@ -25,6 +33,14 @@ const useCoinStore = create((set) => ({
   setLoading: (loading) => set({ loading }),
 
   setError: (error) => set({ error }),
+
+  connectWallet: () => set({
+    wallet: {
+      address: '0x' + Array.from({length: 40}, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+      balance: (Math.random() * 9 + 1).toFixed(2),
+      connected: true
+    }
+  }),
 }))
 
 export default useCoinStore
