@@ -1,31 +1,60 @@
 import axios from 'axios';
+import { getMappedChainId } from '../lib/utils';
 
 const DEX_SCREENER_API = 'https://api.dexscreener.com/latest/dex';
 
+// Helper to deduplicate pairs
+const deduplicatePairs = (pairs) => {
+  const seen = new Set();
+  return pairs.filter(pair => {
+    if (seen.has(pair.pairAddress)) return false;
+    seen.add(pair.pairAddress);
+    return true;
+  });
+};
+
 export const coinService = {
   async getTrending() {
-    // For a real trending endpoint, DexScreener uses token profiles or specific search volumes
-    // For MVP, we fetch latest pairs which serves as a discovery mechanism
     try {
-      const response = await axios.get(`${DEX_SCREENER_API}/search?q=USDT`);
-      return response.data.pairs || [];
+      // Query for common quote tokens to get a broad discovery dataset
+      const quotes = ['USDT', 'USDC', 'ETH', 'SOL'];
+      const requests = quotes.map(quote => axios.get(`${DEX_SCREENER_API}/search?q=${quote}`));
+      const results = await Promise.all(requests);
+
+      const allPairs = results.flatMap(res => res.data.pairs || []);
+      return deduplicatePairs(allPairs);
     } catch (error) {
-      console.error("DexScreener API error", error);
+      console.error("DexScreener API error (getTrending)", error);
       return [];
     }
   },
 
   async searchPairs(query) {
     if (!query) return [];
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
-    return response.data.pairs || [];
+    try {
+      const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
+      return response.data.pairs || [];
+    } catch (error) {
+      console.error("DexScreener API error (searchPairs)", error);
+      return [];
+    }
   },
 
   async getPairsByChain(chainId) {
-    // DexScreener API doesn't have a direct "all pairs for chain" endpoint without a query
-    // So we query for common base tokens on that chain
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${chainId}`);
-    return response.data.pairs || [];
+    try {
+      const mappedChainId = getMappedChainId(chainId);
+
+      // DexScreener doesn't have a direct "all pairs for chain" endpoint,
+      // so we query for the chain name and common tokens.
+      const response = await axios.get(`${DEX_SCREENER_API}/search?q=${mappedChainId}`);
+      let pairs = response.data.pairs || [];
+
+      // Filter strictly by the requested chain to avoid noise from other chains in search results
+      return pairs.filter(p => p.chainId === mappedChainId);
+    } catch (error) {
+      console.error(`DexScreener API error (getPairsByChain: ${chainId})`, error);
+      return [];
+    }
   }
 };
 

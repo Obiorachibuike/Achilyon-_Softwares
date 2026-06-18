@@ -15,9 +15,27 @@ export function formatCurrency(value) {
 }
 
 export function formatCompactNumber(number) {
-  if (number < 1000) return number.toFixed(2)
+  if (number === undefined || number === null) return '0'
+  const num = parseFloat(number)
+  if (num < 1000) return num.toFixed(2)
   return Intl.NumberFormat('en-US', {
     notation: "compact",
     maximumFractionDigits: 2
-  }).format(number)
+  }).format(num)
+}
+
+export function getMappedChainId(chainId) {
+  if (!chainId) return ''
+  const mapping = {
+    'bnb': 'bsc',
+  }
+  return mapping[chainId.toLowerCase()] || chainId.toLowerCase()
+}
+
+export function getDisplayChainName(chainId) {
+  if (!chainId) return ''
+  const mapping = {
+    'bsc': 'BNB',
+  }
+  return mapping[chainId.toLowerCase()] || chainId.toUpperCase()
 }
