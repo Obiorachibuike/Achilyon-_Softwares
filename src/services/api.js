@@ -1,14 +1,27 @@
 import axios from 'axios';
+import { getMappedChainId } from '../lib/utils';
 
 const DEX_SCREENER_API = 'https://api.dexscreener.com/latest/dex';
 
+const fetchPairsConcurrently = async (queryPrefix) => {
+  const quoteTokens = ['USDT', 'USDC', 'WETH', 'SOL', 'WMATIC', 'WBNB', 'WAVAX'];
+  const requests = quoteTokens.map(quote =>
+    axios.get(`${DEX_SCREENER_API}/search?q=${queryPrefix ? `${queryPrefix} ` : ''}${quote}`)
+      .catch(() => ({ data: { pairs: [] } }))
+  );
+
+  const results = await Promise.all(requests);
+  const allPairs = results.flatMap(r => r.data.pairs || []);
+
+  // De-duplicate by pairAddress
+  const uniquePairs = Array.from(new Map(allPairs.map(p => [p.pairAddress, p])).values());
+  return uniquePairs;
+};
+
 export const coinService = {
   async getTrending() {
-    // For a real trending endpoint, DexScreener uses token profiles or specific search volumes
-    // For MVP, we fetch latest pairs which serves as a discovery mechanism
     try {
-      const response = await axios.get(`${DEX_SCREENER_API}/search?q=USDT`);
-      return response.data.pairs || [];
+      return await fetchPairsConcurrently('');
     } catch (error) {
       console.error("DexScreener API error", error);
       return [];
@@ -17,15 +30,23 @@ export const coinService = {
 
   async searchPairs(query) {
     if (!query) return [];
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
-    return response.data.pairs || [];
+    try {
+      const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
+      return response.data.pairs || [];
+    } catch (error) {
+      console.error("DexScreener API search error", error);
+      return [];
+    }
   },
 
-  async getPairsByChain(chainId) {
-    // DexScreener API doesn't have a direct "all pairs for chain" endpoint without a query
-    // So we query for common base tokens on that chain
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${chainId}`);
-    return response.data.pairs || [];
+  async getPairsByChain(chainName) {
+    try {
+      const mappedChainId = getMappedChainId(chainName);
+      return await fetchPairsConcurrently(mappedChainId);
+    } catch (error) {
+      console.error("DexScreener API chain error", error);
+      return [];
+    }
   }
 };
 
