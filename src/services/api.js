@@ -4,11 +4,15 @@ const DEX_SCREENER_API = 'https://api.dexscreener.com/latest/dex';
 
 export const coinService = {
   async getTrending() {
-    // For a real trending endpoint, DexScreener uses token profiles or specific search volumes
-    // For MVP, we fetch latest pairs which serves as a discovery mechanism
     try {
-      const response = await axios.get(`${DEX_SCREENER_API}/search?q=USDT`);
-      return response.data.pairs || [];
+      // Query for various common quotes to get a diverse trending set
+      const queries = ['USDT', 'USDC', 'WETH', 'SOL'];
+      const results = await Promise.all(
+        queries.map(q => axios.get(`${DEX_SCREENER_API}/search?q=${q}`))
+      );
+
+      const allPairs = results.flatMap(r => r.data.pairs || []);
+      return allPairs;
     } catch (error) {
       console.error("DexScreener API error", error);
       return [];
@@ -17,15 +21,25 @@ export const coinService = {
 
   async searchPairs(query) {
     if (!query) return [];
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
-    return response.data.pairs || [];
+    try {
+      const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
+      return response.data.pairs || [];
+    } catch (error) {
+      console.error("Search API error", error);
+      return [];
+    }
   },
 
   async getPairsByChain(chainId) {
-    // DexScreener API doesn't have a direct "all pairs for chain" endpoint without a query
-    // So we query for common base tokens on that chain
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${chainId}`);
-    return response.data.pairs || [];
+    try {
+      // Map common chain names if needed
+      const q = chainId === 'bnb' ? 'bsc' : chainId;
+      const response = await axios.get(`${DEX_SCREENER_API}/search?q=${q}`);
+      return response.data.pairs || [];
+    } catch (error) {
+      console.error("Chain API error", error);
+      return [];
+    }
   }
 };
 
