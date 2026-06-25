@@ -6,18 +6,24 @@ export function cn(...inputs) {
 }
 
 export function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', {
+  if (value === null || value === undefined || isNaN(value)) return '$0.00'
+
+  const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
-  }).format(value)
+    maximumFractionDigits: value < 1 ? 6 : 2,
+  })
+  return formatter.format(value)
 }
 
 export function formatCompactNumber(number) {
-  if (number < 1000) return number.toFixed(2)
+  if (number === null || number === undefined || isNaN(number)) return '0.00'
+  const val = parseFloat(number)
+  if (val < 1000) return val.toFixed(2)
+
   return Intl.NumberFormat('en-US', {
     notation: "compact",
     maximumFractionDigits: 2
-  }).format(number)
+  }).format(val)
 }
