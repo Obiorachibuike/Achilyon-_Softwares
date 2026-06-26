@@ -6,6 +6,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { formatCurrency, formatCompactNumber } from '../lib/utils'
+import { calculateTrendingScore } from '../lib/trending'
 import PropTypes from 'prop-types'
 
 const columnHelper = createColumnHelper()
@@ -39,8 +40,43 @@ const columns = [
   columnHelper.accessor('pairCreatedAt', {
     header: 'Age',
     cell: info => {
+      if (!info.getValue()) return 'N/A'
       const age = (Date.now() - info.getValue()) / 1000 / 60 / 60
       return age < 24 ? `${age.toFixed(1)}h` : `${(age / 24).toFixed(1)}d`
+    },
+  }),
+  columnHelper.accessor('txns.h24', {
+    header: 'Buys/Sells',
+    cell: info => {
+      const { buys = 0, sells = 0 } = info.getValue() || {}
+      const total = buys + sells
+      const buyPercent = total > 0 ? (buys / total) * 100 : 50
+      return (
+        <div className="flex flex-col gap-1 w-32">
+          <div className="flex justify-between text-[10px] font-bold">
+            <span className="text-green-500">{buys}</span>
+            <span className="text-red-500">{sells}</span>
+          </div>
+          <div className="h-1.5 w-full bg-red-500/30 rounded-full overflow-hidden flex">
+            <div
+              className="h-full bg-green-500"
+              style={{ width: `${buyPercent}%` }}
+            />
+          </div>
+        </div>
+      )
+    },
+  }),
+  columnHelper.display({
+    id: 'trend',
+    header: 'Trend',
+    cell: info => {
+      const score = calculateTrendingScore(info.row.original)
+      return (
+        <div className={`font-bold ${score > 50 ? 'text-orange-500' : 'text-muted-foreground'}`}>
+          {score}
+        </div>
+      )
     },
   }),
 ]
