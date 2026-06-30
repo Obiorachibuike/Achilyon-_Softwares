@@ -1,20 +1,41 @@
-export function calculateTrendingScore(pair) {
+
+/**
+ * Calculates a trending score for a token pair based on volume, liquidity, and buy/sell activity.
+ * Returns a score between 0 and 100.
+ */
+export const calculateTrendingScore = (pair) => {
   if (!pair) return 0;
 
-  const volumeH1 = parseFloat(pair.volume?.h1 || 0);
-  const volumeH24 = parseFloat(pair.volume?.h24 || 0);
-  const buysH1 = parseInt(pair.txns?.h1?.buys || 0);
+  let score = 0;
+
+  // 1. Volume Factor (up to 40 points)
+  // High volume relative to typical new pairs
+  const volume24h = parseFloat(pair.volume?.h24 || 0);
+  if (volume24h > 1000000) score += 40;
+  else if (volume24h > 100000) score += 25;
+  else if (volume24h > 10000) score += 10;
+
+  // 2. Buy/Sell Ratio (up to 30 points)
+  const buys = parseInt(pair.txns?.h24?.buys || 0);
+  const sells = parseInt(pair.txns?.h24?.sells || 0);
+  const totalTxns = buys + sells;
+
+  if (totalTxns > 0) {
+    const buyRatio = buys / totalTxns;
+    if (buyRatio > 0.7) score += 30;
+    else if (buyRatio > 0.6) score += 20;
+    else if (buyRatio > 0.5) score += 10;
+  }
+
+  // 3. Activity Level (up to 20 points)
+  if (totalTxns > 5000) score += 20;
+  else if (totalTxns > 1000) score += 15;
+  else if (totalTxns > 100) score += 5;
+
+  // 4. Liquidity Health (up to 10 points)
   const liquidity = parseFloat(pair.liquidity?.usd || 0);
+  if (liquidity > 100000) score += 10;
+  else if (liquidity > 10000) score += 5;
 
-  // Basic scoring algorithm
-  // 1. Volume spike (1h vs 24h)
-  const volumeWeight = (volumeH1 / (volumeH24 / 24 || 1)) * 10;
-
-  // 2. Buy pressure
-  const buyWeight = buysH1 * 2;
-
-  // 3. Liquidity factor (prefers decent liquidity but doesn't penalize new pools too much)
-  const liquidityWeight = Math.min(liquidity / 10000, 20);
-
-  return Math.floor(volumeWeight + buyWeight + liquidityWeight);
-}
+  return Math.min(score, 100);
+};
