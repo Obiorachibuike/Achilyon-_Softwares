@@ -2,13 +2,24 @@ import axios from 'axios';
 
 const DEX_SCREENER_API = 'https://api.dexscreener.com/latest/dex';
 
+// Common quote tokens to search for to get a broad discovery dataset
+const QUOTE_TOKENS = ['USDT', 'USDC', 'WETH', 'SOL', 'WMATIC', 'WBNB', 'WAVAX'];
+
 export const coinService = {
   async getTrending() {
-    // For a real trending endpoint, DexScreener uses token profiles or specific search volumes
-    // For MVP, we fetch latest pairs which serves as a discovery mechanism
     try {
-      const response = await axios.get(`${DEX_SCREENER_API}/search?q=USDT`);
-      return response.data.pairs || [];
+      // Concurrently query for pairs with common quote tokens to get a diverse initial list
+      const requests = QUOTE_TOKENS.map(token =>
+        axios.get(`${DEX_SCREENER_API}/search?q=${token}`)
+      );
+
+      const results = await Promise.all(requests);
+      const allPairs = results.flatMap(res => res.data.pairs || []);
+
+      // Deduplicate by pairAddress
+      const uniquePairs = Array.from(new Map(allPairs.map(p => [p.pairAddress, p])).values());
+
+      return uniquePairs;
     } catch (error) {
       console.error("DexScreener API error", error);
       return [];
@@ -17,15 +28,31 @@ export const coinService = {
 
   async searchPairs(query) {
     if (!query) return [];
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
-    return response.data.pairs || [];
+    try {
+      const response = await axios.get(`${DEX_SCREENER_API}/search?q=${query}`);
+      return response.data.pairs || [];
+    } catch (error) {
+      console.error("DexScreener search error", error);
+      return [];
+    }
   },
 
   async getPairsByChain(chainId) {
-    // DexScreener API doesn't have a direct "all pairs for chain" endpoint without a query
-    // So we query for common base tokens on that chain
-    const response = await axios.get(`${DEX_SCREENER_API}/search?q=${chainId}`);
-    return response.data.pairs || [];
+    try {
+      // DexScreener uses 'bsc' for BNB chain
+      const mappedChainId = chainId === 'bnb' ? 'bsc' : chainId;
+
+      // We query for the chain name to get results for that specific network
+      const response = await axios.get(`${DEX_SCREENER_API}/search?q=${mappedChainId}`);
+      let pairs = response.data.pairs || [];
+
+      // Secondary filter to ensure we only have pairs from the intended chain
+      // (search is broad, e.g., searching "solana" might return bridge tokens on ETH)
+      return pairs.filter(p => p.chainId === mappedChainId);
+    } catch (error) {
+      console.error(`DexScreener chain error for ${chainId}`, error);
+      return [];
+    }
   }
 };
 
