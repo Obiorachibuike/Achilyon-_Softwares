@@ -4,7 +4,7 @@ import FiltersBar from './components/FiltersBar'
 import CoinsTable from './components/CoinsTable'
 import useCoinStore from './store/useCoinStore'
 import { coinService } from './services/api'
-import { TrendingUp, Activity, ShieldCheck, Zap, Sun, Moon } from 'lucide-react'
+import { TrendingUp, Activity, ShieldCheck, Zap, Sun, Moon, Menu, X } from 'lucide-react'
 import { cn } from './lib/utils'
 import PropTypes from 'prop-types'
 import './App.css'
@@ -12,6 +12,7 @@ import './App.css'
 const App = () => {
   const { view, coins, setCoins, loading, setLoading, setError, filters } = useCoinStore()
   const [isLight, setIsLight] = useState(() => localStorage.getItem('nexus-theme') === 'light')
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     document.documentElement.classList.toggle('light-mode', isLight)
@@ -91,9 +92,12 @@ const App = () => {
 
   return (
     <div className="app-shell flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar isLight={isLight} onToggleTheme={() => setIsLight(value => !value)} />
+      <Sidebar isLight={isLight} menuOpen={menuOpen} onClose={() => setMenuOpen(false)} onToggleTheme={() => setIsLight(value => !value)} />
       <main className="main-content flex-1 flex flex-col overflow-hidden">
         <div className="mobile-header h-16 px-4 items-center justify-between glass">
+          <button onClick={() => setMenuOpen(value => !value)} className="p-2 -ml-2 text-muted-foreground" aria-label="Open navigation menu">
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
           <span className="brand text-xl font-bold text-primary">NEXUS<span className="text-white">.</span></span>
           <span className="text-xs text-muted-foreground">Market intelligence</span>
         </div>

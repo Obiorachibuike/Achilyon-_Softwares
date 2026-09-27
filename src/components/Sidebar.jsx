@@ -13,7 +13,7 @@ import {
 import useCoinStore from '../store/useCoinStore'
 import { cn } from '../lib/utils'
 
-const Sidebar = ({ isLight, onToggleTheme }) => {
+const Sidebar = ({ isLight, menuOpen, onClose, onToggleTheme }) => {
   const { view, setView } = useCoinStore()
 
   const navItems = [
@@ -27,7 +27,9 @@ const Sidebar = ({ isLight, onToggleTheme }) => {
   ]
 
   return (
-    <div className="desktop-sidebar w-64 bg-secondary h-screen flex flex-col border-r border-border shrink-0">
+    <>
+    {menuOpen && <button className="mobile-nav-overlay" onClick={onClose} aria-label="Close navigation menu" />}
+    <div className={cn("desktop-sidebar w-64 bg-secondary h-screen flex flex-col border-r border-border shrink-0", menuOpen && "mobile-nav-open")}>
       <div className="p-6 pb-8">
         <h1 className="brand text-2xl font-bold text-primary">NEXUS<span className="text-white">.</span></h1>
         <p className="text-[10px] uppercase tracking-[.22em] text-muted-foreground mt-2">Market intelligence</p>
@@ -36,7 +38,7 @@ const Sidebar = ({ isLight, onToggleTheme }) => {
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => setView(item.id)}
+            onClick={() => { setView(item.id); onClose() }}
             className={cn(
               "nav-item flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all", 
               view === item.id
@@ -54,6 +56,7 @@ const Sidebar = ({ isLight, onToggleTheme }) => {
         {isLight ? 'Dark mode' : 'Light mode'}
       </button>
     </div>
+  </>
   )
 }
 
