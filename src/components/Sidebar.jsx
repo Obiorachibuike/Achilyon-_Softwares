@@ -25,9 +25,10 @@ const Sidebar = () => {
   ]
 
   return (
-    <div className="w-64 bg-secondary h-screen flex flex-col border-r border-border">
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-primary">TERMINAL</h1>
+    <div className="desktop-sidebar w-64 bg-secondary h-screen flex flex-col border-r border-border shrink-0">
+      <div className="p-6 pb-8">
+        <h1 className="brand text-2xl font-bold text-primary">NEXUS<span className="text-white">.</span></h1>
+        <p className="text-[10px] uppercase tracking-[.22em] text-muted-foreground mt-2">Market intelligence</p>
       </div>
       <nav className="flex-1 px-4 space-y-2">
         {navItems.map((item) => (
@@ -35,9 +36,9 @@ const Sidebar = () => {
             key={item.id}
             onClick={() => setView(item.id)}
             className={cn(
-              "flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+              "nav-item flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all", 
               view === item.id
-                ? "bg-primary text-primary-foreground"
+                ? "active bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >

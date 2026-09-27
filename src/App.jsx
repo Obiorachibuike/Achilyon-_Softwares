@@ -7,6 +7,7 @@ import { coinService } from './services/api'
 import { TrendingUp, Activity, ShieldCheck, Zap } from 'lucide-react'
 import { cn } from './lib/utils'
 import PropTypes from 'prop-types'
+import './App.css'
 
 const App = () => {
   const { view, coins, setCoins, loading, setLoading, setError, filters } = useCoinStore()
@@ -47,7 +48,7 @@ const App = () => {
     switch (view) {
       case 'dashboard':
         return (
-          <div className="p-6 space-y-6">
+          <div className="content-pad p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard title="Trending Pairs" value="1,284" icon={TrendingUp} color="text-blue-500" />
               <StatCard title="New Listings" value="42" icon={Zap} color="text-yellow-500" />
@@ -83,10 +84,14 @@ const App = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+    <div className="app-shell flex h-screen bg-background text-foreground overflow-hidden font-sans">
       <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 border-b border-border flex items-center justify-between px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <main className="main-content flex-1 flex flex-col overflow-hidden">
+        <div className="mobile-header h-16 px-4 items-center justify-between glass">
+          <span className="brand text-xl font-bold text-primary">NEXUS<span className="text-white">.</span></span>
+          <span className="text-xs text-muted-foreground">Market intelligence</span>
+        </div>
+        <header className="page-header h-16 border-b border-border flex items-center justify-between px-8 glass sticky top-0 z-10">
           <div className="flex items-center space-y-1">
              <h2 className="text-xl font-bold capitalize">{view}</h2>
           </div>
@@ -115,7 +120,7 @@ const App = () => {
 }
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
-  <div className="bg-card p-6 rounded-xl border border-border flex items-center justify-between">
+  <div className="stat-card shimmer glass bg-card p-6 rounded-2xl border border-border flex items-center justify-between">
     <div>
       <p className="text-sm text-muted-foreground mb-1">{title}</p>
       <p className="text-2xl font-bold">{value}</p>
