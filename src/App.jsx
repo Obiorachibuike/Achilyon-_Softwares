@@ -1,15 +1,23 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import Sidebar from './components/Sidebar'
 import FiltersBar from './components/FiltersBar'
 import CoinsTable from './components/CoinsTable'
 import useCoinStore from './store/useCoinStore'
 import { coinService } from './services/api'
-import { TrendingUp, Activity, ShieldCheck, Zap } from 'lucide-react'
+import { TrendingUp, Activity, ShieldCheck, Zap, Sun, Moon, Menu, X } from 'lucide-react'
 import { cn } from './lib/utils'
 import PropTypes from 'prop-types'
+import './App.css'
 
 const App = () => {
   const { view, coins, setCoins, loading, setLoading, setError, filters } = useCoinStore()
+  const [isLight, setIsLight] = useState(() => localStorage.getItem('nexus-theme') === 'light')
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('light-mode', isLight)
+    localStorage.setItem('nexus-theme', isLight ? 'light' : 'dark')
+  }, [isLight])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -47,7 +55,7 @@ const App = () => {
     switch (view) {
       case 'dashboard':
         return (
-          <div className="p-6 space-y-6">
+          <div className="content-pad p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard title="Trending Pairs" value="1,284" icon={TrendingUp} color="text-blue-500" />
               <StatCard title="New Listings" value="42" icon={Zap} color="text-yellow-500" />
@@ -83,10 +91,17 @@ const App = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 border-b border-border flex items-center justify-between px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+    <div className="app-shell flex h-screen bg-background text-foreground overflow-hidden font-sans">
+      <Sidebar isLight={isLight} menuOpen={menuOpen} onClose={() => setMenuOpen(false)} onToggleTheme={() => setIsLight(value => !value)} />
+      <main className="main-content flex-1 flex flex-col overflow-hidden">
+        <div className="mobile-header h-16 px-4 items-center justify-between glass">
+          <button onClick={() => setMenuOpen(value => !value)} className="p-2 -ml-2 text-muted-foreground" aria-label="Open navigation menu">
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+          <span className="brand text-xl font-bold text-primary">NEXUS<span className="text-white">.</span></span>
+          <span className="text-xs text-muted-foreground">Market intelligence</span>
+        </div>
+        <header className="page-header h-16 border-b border-border flex items-center justify-between px-8 glass sticky top-0 z-10">
           <div className="flex items-center space-y-1">
              <h2 className="text-xl font-bold capitalize">{view}</h2>
           </div>
@@ -95,7 +110,10 @@ const App = () => {
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
               LIVE
             </div>
-            <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">
+            <button aria-label="Toggle color theme" onClick={() => setIsLight(value => !value)} className="theme-toggle p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors">
+              {isLight ? <Moon size={17} /> : <Sun size={17} />}
+            </button>
+            <button className="wallet-button bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all">
               Connect Wallet
             </button>
           </div>
@@ -115,7 +133,7 @@ const App = () => {
 }
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
-  <div className="bg-card p-6 rounded-xl border border-border flex items-center justify-between">
+  <div className="stat-card shimmer glass bg-card p-6 rounded-2xl border border-border flex items-center justify-between">
     <div>
       <p className="text-sm text-muted-foreground mb-1">{title}</p>
       <p className="text-2xl font-bold">{value}</p>
