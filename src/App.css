@@ -29,4 +29,14 @@
   .hide-mobile { display:none; }
 }
 @media (min-width: 769px) { .mobile-header { display:none !important; } }
+.light-mode body { background:#f4f6fb; color:#172033; }
+.light-mode .app-shell { background:#f4f6fb; }
+.light-mode .app-shell::before { opacity:.12; }
+.light-mode .app-shell::after { opacity:.1; }
+.light-mode .glass { background:rgba(255,255,255,.78); border-color:rgba(71,85,105,.14); }
+.light-mode .text-white { color:#172033 !important; }
+.light-mode .bg-secondary { background-color:#e9edf5; }
+.light-mode .bg-card { background-color:#fff; }
+.light-mode .text-muted-foreground { color:#64748b; }
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } }

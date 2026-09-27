@@ -1,16 +1,22 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import Sidebar from './components/Sidebar'
 import FiltersBar from './components/FiltersBar'
 import CoinsTable from './components/CoinsTable'
 import useCoinStore from './store/useCoinStore'
 import { coinService } from './services/api'
-import { TrendingUp, Activity, ShieldCheck, Zap } from 'lucide-react'
+import { TrendingUp, Activity, ShieldCheck, Zap, Sun, Moon } from 'lucide-react'
 import { cn } from './lib/utils'
 import PropTypes from 'prop-types'
 import './App.css'
 
 const App = () => {
   const { view, coins, setCoins, loading, setLoading, setError, filters } = useCoinStore()
+  const [isLight, setIsLight] = useState(() => localStorage.getItem('nexus-theme') === 'light')
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('light-mode', isLight)
+    localStorage.setItem('nexus-theme', isLight ? 'light' : 'dark')
+  }, [isLight])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -85,7 +91,7 @@ const App = () => {
 
   return (
     <div className="app-shell flex h-screen bg-background text-foreground overflow-hidden font-sans">
-      <Sidebar />
+      <Sidebar isLight={isLight} onToggleTheme={() => setIsLight(value => !value)} />
       <main className="main-content flex-1 flex flex-col overflow-hidden">
         <div className="mobile-header h-16 px-4 items-center justify-between glass">
           <span className="brand text-xl font-bold text-primary">NEXUS<span className="text-white">.</span></span>
@@ -100,7 +106,10 @@ const App = () => {
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
               LIVE
             </div>
-            <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">
+            <button aria-label="Toggle color theme" onClick={() => setIsLight(value => !value)} className="theme-toggle p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors">
+              {isLight ? <Moon size={17} /> : <Sun size={17} />}
+            </button>
+            <button className="wallet-button bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all">
               Connect Wallet
             </button>
           </div>

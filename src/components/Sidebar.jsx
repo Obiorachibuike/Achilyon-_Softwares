@@ -1,6 +1,8 @@
 
 import {
   LayoutDashboard,
+  Sun,
+  Moon,
   Wallet,
   FileText,
   Coins,
@@ -11,7 +13,7 @@ import {
 import useCoinStore from '../store/useCoinStore'
 import { cn } from '../lib/utils'
 
-const Sidebar = () => {
+const Sidebar = ({ isLight, onToggleTheme }) => {
   const { view, setView } = useCoinStore()
 
   const navItems = [
@@ -47,6 +49,10 @@ const Sidebar = () => {
           </button>
         ))}
       </nav>
+      <button onClick={onToggleTheme} className="mx-4 mb-5 flex items-center gap-3 rounded-lg border border-border px-4 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors" aria-label="Toggle color theme">
+        {isLight ? <Moon size={17} /> : <Sun size={17} />}
+        {isLight ? 'Dark mode' : 'Light mode'}
+      </button>
     </div>
   )
 }
