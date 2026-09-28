@@ -1,63 +1,70 @@
-
-import {
-  LayoutDashboard,
-  Sun,
-  Moon,
-  Wallet,
-  FileText,
-  Coins,
-  Bell,
-  UserCheck,
-  TrendingUp
-} from 'lucide-react'
-import useCoinStore from '../store/useCoinStore'
+import { NavLink } from 'react-router-dom'
+import { Sun, Moon, Command, X } from 'lucide-react'
+import { NAV_ITEMS } from '../nav'
 import { cn } from '../lib/utils'
+import useThemeStore from '../store/useThemeStore'
+import useWatchlistStore from '../store/useWatchlistStore'
+import useAlertStore from '../store/useAlertStore'
+import Logo from './Logo'
 
-const Sidebar = ({ isLight, menuOpen, onClose, onToggleTheme }) => {
-  const { view, setView } = useCoinStore()
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'wallets', label: 'Wallets', icon: Wallet },
-    { id: 'contracts', label: 'Contracts', icon: FileText },
-    { id: 'coins', label: 'Coins', icon: Coins },
-    { id: 'alerts', label: 'Alerts', icon: Bell },
-    { id: 'smart-money', label: 'Smart Money', icon: UserCheck },
-    { id: 'trending', label: 'Trending', icon: TrendingUp },
-  ]
+export default function Sidebar({ open, onClose, onOpenPalette }) {
+  const { theme, toggleTheme } = useThemeStore()
+  const watchCount = useWatchlistStore((s) => s.items.length)
+  const triggered = useAlertStore((s) => s.alerts.filter((a) => a.status === 'triggered').length)
+  const activeAlerts = useAlertStore((s) => s.alerts.filter((a) => a.status === 'active').length)
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 
   return (
     <>
-    {menuOpen && <button className="mobile-nav-overlay" onClick={onClose} aria-label="Close navigation menu" />}
-    <div className={cn("desktop-sidebar w-64 bg-secondary h-screen flex flex-col border-r border-border shrink-0", menuOpen && "mobile-nav-open")}>
-      <div className="p-6 pb-8">
-        <h1 className="brand text-2xl font-bold text-primary">NEXUS<span className="text-white">.</span></h1>
-        <p className="text-[10px] uppercase tracking-[.22em] text-muted-foreground mt-2">Market intelligence</p>
-      </div>
-      <nav className="flex-1 px-4 space-y-2">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => { setView(item.id); onClose() }}
-            className={cn(
-              "nav-item flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all", 
-              view === item.id
-                ? "active bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            <item.icon className="w-5 h-5 mr-3" />
-            {item.label}
+      <div className={cn('sidebar-overlay', open && 'is-open')} onClick={onClose} aria-hidden="true" />
+      <aside className={cn('sidebar flex w-64 shrink-0 flex-col border-r border-border bg-secondary/70 backdrop-blur-xl', open && 'is-open')} aria-label="Primary">
+        <div className="flex items-center justify-between px-5 pb-6 pt-6">
+          <Logo />
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground md:hidden" aria-label="Close navigation menu">
+            <X size={20} />
           </button>
-        ))}
-      </nav>
-      <button onClick={onToggleTheme} className="mx-4 mb-5 flex items-center gap-3 rounded-lg border border-border px-4 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors" aria-label="Toggle color theme">
-        {isLight ? <Moon size={17} /> : <Sun size={17} />}
-        {isLight ? 'Dark mode' : 'Light mode'}
-      </button>
-    </div>
-  </>
+        </div>
+
+        <button type="button" onClick={onOpenPalette} className="mx-4 mb-4 flex items-center gap-2 rounded-lg border border-border bg-background/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground">
+          <Command size={15} /> Quick search
+          <kbd className="ml-auto rounded border border-border px-1.5 text-[10px]">{isMac ? '⌘' : 'Ctrl'} K</kbd>
+        </button>
+
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3">
+          {NAV_ITEMS.map((item) => {
+            const badge = item.badge === 'watchlist' ? watchCount : item.badge === 'alerts' ? (triggered || activeAlerts) : 0
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={onClose}
+                className={({ isActive }) => cn(
+                  'nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+                  isActive ? 'active bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                )}
+              >
+                <item.icon size={18} />
+                <span className="flex-1">{item.label}</span>
+                {badge > 0 && (
+                  <span className={cn('rounded-full px-1.5 text-[10px] font-bold', item.badge === 'alerts' && triggered ? 'bg-red-500 text-white' : 'bg-background/40')}>
+                    {badge}
+                  </span>
+                )}
+              </NavLink>
+            )
+          })}
+        </nav>
+
+        <div className="space-y-3 p-4">
+          <button type="button" onClick={toggleTheme} className="flex w-full items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground" aria-label="Toggle color theme">
+            {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
+            {theme === 'light' ? 'Dark mode' : 'Light mode'}
+          </button>
+          <p className="px-1 text-[10px] leading-relaxed text-muted-foreground">Market data by DexScreener. Security data by GoPlus. Not financial advice.</p>
+        </div>
+      </aside>
+    </>
   )
 }
-
-export default Sidebar
