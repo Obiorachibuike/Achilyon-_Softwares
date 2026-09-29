@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Achilyon design tokens ─────────────────────────────────────────────
+   Dark-first palette. Values are RGB triplets so Tailwind can apply alpha.  */
+@layer base {
+  :root {
+    --bg: 5 7 13;            /* #05070D */
+    --bg-2: 10 15 28;        /* #0A0F1C */
+    --card: 13 19 33;        /* #0D1321 */
+    --elevated: 18 26 44;
+    --primary: 59 130 246;   /* #3B82F6 */
+    --primary-deep: 30 58 138; /* #1E3A8A */
+    --gold: 245 176 65;      /* #F5B041 */
+    --up: 34 197 94;         /* #22C55E */
+    --down: 239 68 68;       /* #EF4444 */
+    --warn: 245 158 11;
+    --fg: 248 250 252;       /* #F8FAFC */
+    --muted: 148 163 184;    /* #94A3B8 */
+    --subtle: 100 116 139;
+    color-scheme: dark;
+  }
+
+  * { border-color: rgba(255, 255, 255, 0.08); }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-bg font-sans text-fg antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  ::selection { background: rgb(var(--primary) / 0.35); }
+  :focus-visible { outline: 2px solid rgb(var(--primary)); outline-offset: 2px; border-radius: 6px; }
+  input, select, textarea, button { font: inherit; }
+  input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; }
+  select option { background: rgb(var(--card)); color: rgb(var(--fg)); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,0.16); }
+}
+
+@layer components {
+  .num { font-variant-numeric: tabular-nums; }
+  .panel { @apply rounded-2xl border border-line bg-card; }
+  .panel-glass { @apply rounded-2xl border border-line; background: rgb(var(--card) / 0.72); backdrop-filter: blur(16px) saturate(140%); }
+  .hairline { @apply border-line; }
+  .label { @apply text-[11px] font-medium uppercase tracking-[0.08em] text-muted; }
+  .input {
+    @apply w-full rounded-xl border border-line bg-bg-2 px-3 py-2.5 text-sm text-fg outline-none transition placeholder:text-subtle;
+    @apply focus:border-primary/60 focus:ring-2 focus:ring-primary/20;
+  }
+  .input[aria-invalid='true'] { @apply border-down/60 focus:ring-down/20; }
+  .skeleton { @apply relative overflow-hidden rounded-md bg-white/[0.05]; }
+  .skeleton::after {
+    content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    animation: shimmer 1.6s infinite;
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 75%);
+  }
+  .text-gradient { background: linear-gradient(100deg, #F8FAFC 10%, #93C5FD 55%, #F5B041 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+}
+
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  .marquee { animation: none !important; overflow-x: auto; }
+}
