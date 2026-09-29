@@ -145,7 +145,7 @@ export const dexscreener = {
   },
   /** Market universe: seed searches + boosted tokens (as in the original app). */
   async universe(): Promise<DexPair[]> {
-    return cached('ds:universe', 60_000, async () => {
+    return cached('ds:universe', 15_000, async () => {
       const queries = serverEnv().MARKET_QUERIES.split(',').map((q) => q.trim()).filter(Boolean)
       const results = await Promise.allSettled(queries.map((q) => this.search(q)))
       const pairs = results.flatMap((r) => (r.status === 'fulfilled' ? r.value : []))

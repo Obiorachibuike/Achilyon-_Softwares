@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { useTokenList } from '@/hooks/useMarket'
 import { useNow } from '@/hooks/useNow'
 import { useMounted } from '@/hooks/useMounted'
+import { useMemo } from 'react'
 import { useRecentStore } from '@/stores/recent'
 import { usePreferences } from '@/stores/preferences'
 import { errorMessage } from '@/lib/api/client'
@@ -17,9 +18,21 @@ import { MarketStrip } from '@/features/market/MarketStrip'
 import { TokenCard, TokenCardSkeleton } from '@/features/market/TokenCard'
 import { TokenTable } from '@/features/market/TokenTable'
 import { MiniTokenList } from '@/features/market/MiniTokenList'
+import { formatInteger, formatUsdCompact } from '@/lib/format'
 
 function SectionLink({ href, children = 'View all' }: { href: string; children?: ReactNode }) {
   return <Link href={href} className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-fg">{children} <ArrowRight className="h-3 w-3" aria-hidden /></Link>
+}
+
+function MarketStat({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <Card className="relative overflow-hidden p-4">
+      <div className="absolute right-0 top-0 h-16 w-16 rounded-full bg-primary/10 blur-2xl" aria-hidden />
+      <div className="label">{label}</div>
+      <div className="mt-2 font-display text-2xl font-semibold tracking-tight num">{value}</div>
+      <div className="mt-1 text-xs text-muted">{detail}</div>
+    </Card>
+  )
 }
 
 export function HomeView() {
@@ -34,6 +47,25 @@ export function HomeView() {
   const recent = useRecentStore((s) => s.items)
   const now = useNow(30_000)
   const demo = trending.data?.demo
+  const snapshot = useMemo(() => {
+    const items = trending.data?.items ?? []
+    let volume = 0
+    let liquidity = 0
+    let buys = 0
+    let sells = 0
+    for (const item of items) {
+      volume += item.market.volume.h24
+      liquidity += item.market.liquidityUsd
+      buys += item.market.txns.h24.buys
+      sells += item.market.txns.h24.sells
+    }
+    const totalTxns = buys + sells
+    return {
+      volume,
+      liquidity,
+      buyPressure: totalTxns > 0 ? (buys / totalTxns) * 100 : null,
+    }
+  }, [trending.data?.items])
 
   return (
     <div className="space-y-8">
@@ -58,6 +90,29 @@ export function HomeView() {
       </section>
 
       <MarketStrip />
+
+      <section aria-label="Market snapshot" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <MarketStat
+          label="Tracked markets"
+          value={formatInteger(trending.data?.total ?? 0)}
+          detail={demo ? 'Simulated universe' : 'Live tracked universe'}
+        />
+        <MarketStat
+          label="24h volume"
+          value={formatUsdCompact(snapshot.volume)}
+          detail="Across tracked markets"
+        />
+        <MarketStat
+          label="Liquidity"
+          value={formatUsdCompact(snapshot.liquidity)}
+          detail="Across tracked markets"
+        />
+        <MarketStat
+          label="Buy pressure"
+          value={snapshot.buyPressure === null ? 'N/A' : `${snapshot.buyPressure.toFixed(0)}%`}
+          detail="24h buys / total transactions"
+        />
+      </section>
 
       <section aria-labelledby="trending-h">
         <Card className="overflow-hidden">
