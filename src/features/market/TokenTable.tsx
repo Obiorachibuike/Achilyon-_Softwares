@@ -7,6 +7,7 @@ import type { MarketToken } from '@/types'
 import { cn } from '@/lib/cn'
 import { formatAge, formatCompact, formatInteger, formatPrice, formatUsdCompact, shortAddress } from '@/lib/format'
 import { buyRatio, paginate, sortTokens, type SortDirection, type SortKey } from '@/lib/market/sorting'
+import { trendingScore } from '@/lib/market/scoring'
 import { tokenPath } from '@/lib/paths'
 import { useLiveToken } from '@/hooks/useLiveToken'
 import { useNow } from '@/hooks/useNow'
@@ -18,7 +19,7 @@ import { Skeleton } from '@/components/ui/primitives'
 import { EmptyState, ErrorState, DemoBadge } from '@/components/ui/feedback'
 import { NETWORKS } from '@/lib/blockchain/chains'
 
-export type ColumnKey = 'token' | 'price' | 'change1h' | 'change6h' | 'change24h' | 'volume' | 'liquidity' | 'marketCap' | 'txns' | 'buyRatio' | 'age' | 'creator' | 'progress' | 'dex'
+export type ColumnKey = 'token' | 'price' | 'change1h' | 'change6h' | 'change24h' | 'volume' | 'liquidity' | 'marketCap' | 'txns' | 'buyRatio' | 'age' | 'creator' | 'progress' | 'dex' | 'trending'
 
 interface ColumnDef {
   label: string
@@ -43,6 +44,7 @@ const COLUMNS: Record<ColumnKey, ColumnDef> = {
   creator: { label: 'Creator', align: 'right' },
   progress: { label: 'Curve', sort: 'progress', align: 'right', className: 'w-[120px]', title: 'Bonding-curve progress toward migration' },
   dex: { label: 'DEX', align: 'right' },
+  trending: { label: 'Trend', sort: 'trending', align: 'right', title: 'Trending Score' },
 }
 
 export const DEFAULT_COLUMNS: ColumnKey[] = ['token', 'price', 'change1h', 'change6h', 'change24h', 'volume', 'liquidity', 'marketCap', 'txns', 'buyRatio']
@@ -206,6 +208,14 @@ function Cell({ t, col, now }: { t: MarketToken; col: ColumnKey; now: number }) 
     case 'creator': return t.token.creator ? <Link href={`/profile/${t.token.creator}`} onClick={(e) => e.stopPropagation()} className="font-mono text-xs text-muted hover:text-fg">{shortAddress(t.token.creator)}</Link> : <span className="text-subtle">—</span>
     case 'progress': return <CurveProgress t={t} />
     case 'dex': return <span className="text-muted">{t.pair.dexName}</span>
+    case 'trending': {
+      const score = trendingScore(t).score
+      return (
+        <span className="num font-semibold text-primary" title={`Trending score: ${score}/100`}>
+          🔥 {score}
+        </span>
+      )
+    }
     default: return null
   }
 }
