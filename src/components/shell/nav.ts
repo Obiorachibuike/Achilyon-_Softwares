@@ -1,4 +1,4 @@
-import { Activity, BellRing, BookOpen, Compass, Flame, Home, LineChart, Rocket, Settings, ShieldCheck, Sparkles, Star, TrendingDown, TrendingUp, Users, Wallet, Layers, Receipt, type LucideIcon } from 'lucide-react'
+import { Activity, BellRing, BookOpen, Coins, Compass, Flame, Home, LineChart, Rocket, Settings, ShieldCheck, Sparkles, Star, TrendingDown, TrendingUp, Users, Wallet, Layers, Receipt, type LucideIcon } from 'lucide-react'
 
 export interface NavItem {
   href: string
@@ -10,6 +10,7 @@ export interface NavItem {
 
 export const PRIMARY_NAV: NavItem[] = [
   { href: '/', label: 'Home', icon: Home, exact: true },
+  { href: '/coins', label: 'Coins', icon: Coins },
   { href: '/discover', label: 'Discover', icon: Compass },
   { href: '/trending', label: 'Trending', icon: Flame },
   { href: '/new', label: 'New Tokens', icon: Sparkles },

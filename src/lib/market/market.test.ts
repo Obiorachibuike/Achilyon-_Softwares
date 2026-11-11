@@ -18,6 +18,8 @@ describe('filters', () => {
     expect(applyFilters(tokens, { chain: 'base' })).toHaveLength(1)
     expect(applyFilters(tokens, { minMarketCap: 100_000 })).toHaveLength(2)
     expect(applyFilters(tokens, { minMarketCap: 100_000, maxMarketCap: 1_000_000 })).toHaveLength(1)
+    expect(applyFilters(tokens, { marketCapTier: 'micro' }).map((t) => t.token.symbol)).toEqual(['PEPE', 'ACHX'])
+    expect(applyFilters(tokens, { marketCapTier: 'small' }).map((t) => t.token.symbol)).toEqual(['ACH'])
     expect(applyFilters(tokens, { minLiquidity: 40_000 })).toHaveLength(2)
     expect(applyFilters(tokens, { verifiedOnly: true })[0]?.token.symbol).toBe('ACH')
   })
@@ -34,7 +36,7 @@ describe('filters', () => {
   })
 
   it('round-trips through URL params', () => {
-    const f: MarketFilters = { ...DEFAULT_FILTERS, chain: 'solana', minMarketCap: 1000, maxAgeHours: 24, changeDirection: 'up', minChange: 5, dex: 'raydium', status: 'bonding', verifiedOnly: true, query: 'ach' }
+    const f: MarketFilters = { ...DEFAULT_FILTERS, chain: 'solana', minMarketCap: 1000, marketCapTier: 'micro', volumeTimeframe: 'h1', maxAgeHours: 24, changeDirection: 'up', minChange: 5, dex: 'raydium', status: 'bonding', verifiedOnly: true, query: 'ach' }
     expect(filtersFromParams(filtersToParams(f), isChainId)).toEqual(f)
     expect(filtersToParams(DEFAULT_FILTERS).toString()).toBe('')
   })
