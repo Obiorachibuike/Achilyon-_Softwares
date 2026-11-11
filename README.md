@@ -16,6 +16,7 @@ bonding-curve token launchpad, and a moderated community layer.
 
 | Area | What it does |
 | --- | --- |
+| **Coins Terminal** (`/coins`) | Professional trading terminal view featuring dynamic multi-chain and DEX filtering, market cap tiers, volume/liquidity filters, age filters, buy/sell ratios, and live trending scores. |
 | **Discover** (`/`, `/discover`) | Live market strip, trending, new tokens, new pairs, gainers, losers and recently viewed. The full market table sorts, filters (network, market cap, liquidity, volume, age, change, DEX, status, verified) and paginates, with the state kept in the URL. |
 | **Trending** (`/trending`) | Transparent scores that show their component breakdown (volume, momentum, activity, liquidity, buy pressure, discussion), with Hot, Fastest-growing, Most-discussed and Viral sections. |
 | **Lists** | `/new`, `/pairs`, `/gainers`, `/losers`, all built on the reusable `TokenTable` and `FilterBar`. |

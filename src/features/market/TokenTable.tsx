@@ -2,11 +2,12 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { memo, useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, SearchX } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Flame, SearchX } from 'lucide-react'
 import type { MarketToken } from '@/types'
 import { cn } from '@/lib/cn'
 import { formatAge, formatCompact, formatInteger, formatPrice, formatUsdCompact, shortAddress } from '@/lib/format'
 import { buyRatio, paginate, sortTokens, type SortDirection, type SortKey } from '@/lib/market/sorting'
+import { trendingScore } from '@/lib/market/scoring'
 import { tokenPath } from '@/lib/paths'
 import { useLiveToken } from '@/hooks/useLiveToken'
 import { useNow } from '@/hooks/useNow'
@@ -18,7 +19,7 @@ import { Skeleton } from '@/components/ui/primitives'
 import { EmptyState, ErrorState, DemoBadge } from '@/components/ui/feedback'
 import { NETWORKS } from '@/lib/blockchain/chains'
 
-export type ColumnKey = 'token' | 'price' | 'change1h' | 'change6h' | 'change24h' | 'volume' | 'liquidity' | 'marketCap' | 'txns' | 'buyRatio' | 'age' | 'creator' | 'progress' | 'dex'
+export type ColumnKey = 'token' | 'price' | 'change1h' | 'change6h' | 'change24h' | 'volume' | 'liquidity' | 'marketCap' | 'txns' | 'buyRatio' | 'age' | 'creator' | 'progress' | 'dex' | 'trending'
 
 interface ColumnDef {
   label: string
@@ -36,13 +37,14 @@ const COLUMNS: Record<ColumnKey, ColumnDef> = {
   change24h: { label: '24H', sort: 'change24h', align: 'right' },
   volume: { label: 'Volume', sort: 'volume', align: 'right', title: '24h volume' },
   liquidity: { label: 'Liquidity', sort: 'liquidity', align: 'right' },
-  marketCap: { label: 'Mkt Cap', sort: 'marketCap', align: 'right' },
+  marketCap: { label: 'MCAP', sort: 'marketCap', align: 'right' },
   txns: { label: 'Txns', sort: 'txns', align: 'right', title: '24h transactions' },
   buyRatio: { label: 'Buys / Sells', sort: 'buyRatio', align: 'right', className: 'w-[120px]' },
   age: { label: 'Age', sort: 'age', align: 'right' },
   creator: { label: 'Creator', align: 'right' },
   progress: { label: 'Curve', sort: 'progress', align: 'right', className: 'w-[120px]', title: 'Bonding-curve progress toward migration' },
   dex: { label: 'DEX', align: 'right' },
+  trending: { label: 'Trend', sort: 'trending', align: 'right', title: 'Achilyon trending score (0-100)' },
 }
 
 export const DEFAULT_COLUMNS: ColumnKey[] = ['token', 'price', 'change1h', 'change6h', 'change24h', 'volume', 'liquidity', 'marketCap', 'txns', 'buyRatio']
@@ -190,6 +192,17 @@ export function CurveProgress({ t, className }: { t: MarketToken; className?: st
   )
 }
 
+function TrendScoreBadge({ t }: { t: MarketToken }) {
+  const { score, components } = trendingScore(t)
+  const breakdown = components.map((c) => `${c.label}: ${c.value.toFixed(1)}/${c.max}`).join('\n')
+  return (
+    <div className="inline-flex items-center gap-1 rounded-md bg-gold/10 px-2 py-0.5 text-xs font-semibold text-gold" title={`Trending score: ${score}/100\n${breakdown}`}>
+      <Flame className="h-3 w-3" />
+      <span className="num">{score}</span>
+    </div>
+  )
+}
+
 function Cell({ t, col, now }: { t: MarketToken; col: ColumnKey; now: number }) {
   const m = t.market
   switch (col) {
@@ -206,6 +219,7 @@ function Cell({ t, col, now }: { t: MarketToken; col: ColumnKey; now: number }) 
     case 'creator': return t.token.creator ? <Link href={`/profile/${t.token.creator}`} onClick={(e) => e.stopPropagation()} className="font-mono text-xs text-muted hover:text-fg">{shortAddress(t.token.creator)}</Link> : <span className="text-subtle">—</span>
     case 'progress': return <CurveProgress t={t} />
     case 'dex': return <span className="text-muted">{t.pair.dexName}</span>
+    case 'trending': return <TrendScoreBadge t={t} />
     default: return null
   }
 }
